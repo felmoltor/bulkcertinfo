@@ -37,7 +37,7 @@ def validCNForDomainName(domain,cn):
     cn = cn.replace("*",".*")
     cnre = re.compile(cn)
     matchcn = cnre.match(domain)
-    return matchcn is not None and matchcn.group(0)==domain:
+    return matchcn is not None and matchcn.group(0)==domain
 
 def domainToIp(domain):
     ip = domain
