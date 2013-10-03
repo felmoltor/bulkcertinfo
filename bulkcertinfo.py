@@ -140,10 +140,11 @@ for iline in ifile:
                     except ssl.SSLError as ssle2:
                         try:
                             print "Server %s not accepting TLSv1. Changing to SSLv2..." % ip_or_domain
-                            ssl.PROTOCOL_SSLv2
+                            ssl.PROTOCOL_SSLv23
                             cert=ssl.get_server_certificate((ip, int(port)))
-                        except ssl.SSLError as ssle3:   
+                        except Exception as generale:   
                             sys.stderr.write("Line %s: There was some problem requesting SSL certificate to '%s'. Skipping.\n" % (nline,ip_or_domain))
+                            sys.stderr.write("Line %s: Errno %s: '%s'\n" % (nline,generale.errno,generale.message))
                             ofile.write("%s;%s;%s;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;\n" % (ip_or_domain,ip,port))
                             continue
                 except:
