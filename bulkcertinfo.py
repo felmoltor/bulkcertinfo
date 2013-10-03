@@ -124,14 +124,25 @@ for iline in ifile:
                 # Get all the certificate information we can
                 print ("Getting certificate info from %s:%s (%s)") % (ip,port,ip_or_domain)
                 try:
-                    # TODO: Las veces que peta es por que no acepta SSLv3
+                    # Las veces que peta es por que no acepta SSLv3
                     # Cambiar a TLSv1 en estos casos (http://docs.python.org/2/library/ssl.html)
                     # ssl.PROTOCOL_TLSv1 o ssl.PROTOCOL_SSLv3
+                    ssl.PROTOCOL_SSLv3
                     cert=ssl.get_server_certificate((ip, int(port)))
-                except ssl.SSLError as ssle:
-                    sys.stderr.write("Line %s: There was some problem requesting SSL certificate to '%s'. Skipping.\n" % (nline,ip_or_domain))
-                    ofile.write("%s;%s;%s;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;")
-                    continue
+                except ssl.SSLError as ssle1:
+                    try:
+                        print "Server %s not accepting SSLv3. Changing to TLSv1..." % ip_or_domain
+                        ssl.PROTOCOL_TLSv1
+                        cert=ssl.get_server_certificate((ip, int(port)))
+                    except ssl.SSLError as ssle2:
+                        try:
+                            print "Server %s not accepting TLSv1. Changing to SSLv2..." % ip_or_domain
+                            ssl.PROTOCOL_SSLv2
+                            cert=ssl.get_server_certificate((ip, int(port)))
+                        except ssl.SSLError as ssle3:   
+                            sys.stderr.write("Line %s: There was some problem requesting SSL certificate to '%s'. Skipping.\n" % (nline,ip_or_domain))
+                            ofile.write("%s;%s;%s;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;\n" % (ip_or_domain,ip,port))
+                            continue
                 except:
                     sys.stderr.write("Unexpected error. There was some problem requesting Certificate to '%s'. Skipping." % ip_or_domain)
                     continue
@@ -170,7 +181,7 @@ for iline in ifile:
                 ofile.write("\n")
             else:  # Del isTargetPortOpen
                 print sys.stderr.write("Line %s: Target port %s is not open on target domain host (%s,%s). Skipping...\n" % (ip_or_domain,ip))
-                ofile.write("%s;%s;%s;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;")
+                ofile.write("%s;%s;%s;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;\n" % (ip_or_domain,ip,port))
 
         else:
             sys.stderr.write("Line %s: The IP does not have the format <IP>:<PORT>. Skipping...\n" % nline)
