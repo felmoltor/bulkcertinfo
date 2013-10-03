@@ -129,9 +129,11 @@ for iline in ifile:
                     # ssl.PROTOCOL_TLSv1 o ssl.PROTOCOL_SSLv3
                     cert=ssl.get_server_certificate((ip, int(port)))
                 except ssl.SSLError as ssle:
-                    
-                    sys.stderr.write("Line %s: There was some problem requesting SSL certificate to %s:%s. Skipping.\n" % (nline,ip_or_domain))
+                    sys.stderr.write("Line %s: There was some problem requesting SSL certificate to '%s'. Skipping.\n" % (nline,ip_or_domain))
                     ofile.write("%s;%s;%s;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;")
+                    continue
+                except:
+                    sys.stderr.write("Unexpected error. There was some problem requesting Certificate to '%s'. Skipping." % ip_or_domain)
                     continue
 
                 cert_X509=M2Crypto.X509.load_cert_string(cert)
