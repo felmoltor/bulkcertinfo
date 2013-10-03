@@ -106,26 +106,39 @@ for iline in ifile:
     # If this line is not a commentary (marked with a '#')
     if iline[0]!='#':
         ip_port=iline.split(":")
-        if len(ip_port) == 2:
-            ip_or_domain=ip_port[0]
-            port=ip_port[1]
+        if len(ip_port) == 1 or len(ip_port) == 2:
+            ip_or_domain=ip_port[0] 
+            port=443
+            if len(ip_port) == 2:
+                port=int(ip_port[1])
+    
             ip = domainToIp(ip_or_domain)
             if (not re.match('\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}',ip)):
                 sys.stderr.write("Line %s: The IP '%s' does not have a correct format. Skipping...\n" % (nline,iline))
                 continue
-            if (int(port) < 1 or int(port) > 65534):
+            if (port < 1 or port > 65534):
                 sys.stderr.write("Line %s: The port %s is out of bounds (1-65535). Skipping...\n" % (nline,port))
                 continue
            
             if (isTargetPortOpen(ip,port)):
                 # Get all the certificate information we can
                 print ("Getting certificate info from %s:%s (%s)") % (ip,port,ip_or_domain)
-                cert=ssl.get_server_certificate((ip, int(port)))
+                try:
+                    # TODO: Las veces que peta es por que no acepta SSLv3
+                    # Cambiar a TLSv1 en estos casos (http://docs.python.org/2/library/ssl.html)
+                    # ssl.PROTOCOL_TLSv1 o ssl.PROTOCOL_SSLv3
+                    cert=ssl.get_server_certificate((ip, int(port)))
+                except ssl.SSLError as ssle:
+                    
+                    sys.stderr.write("Line %s: There was some problem requesting SSL certificate to %s:%s. Skipping.\n" % (nline,ip_or_domain))
+                    ofile.write("%s;%s;%s;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;")
+                    continue
+
                 cert_X509=M2Crypto.X509.load_cert_string(cert)
                 #Escribimos los datos
                 ofile.write(ip_or_domain + ";")
                 ofile.write(ip + ";")
-                ofile.write(port + ";")
+                ofile.write(str(port) + ";")
                 if isCertificateTimeValid(str(cert_X509.get_not_after()),str(cert_X509.get_not_before())):
                     ofile.write("OK;")
                 else:
