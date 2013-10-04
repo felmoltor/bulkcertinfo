@@ -22,7 +22,7 @@ import nmap
 #############
 
 # Timeout function taken from http://stackoverflow.com/questions/492519/timeout-on-a-python-function-call
-# (Thank FSM exists stackoverflow.com)
+# (Thanks FSM exists stackoverflow.com)
 def timeout(func, args=(), kwargs={}, timeout_duration=10, default=None):
     """This function will spawn a thread and run the given function
     using the args, kwargs and return the given default value if the
@@ -52,6 +52,7 @@ def retrieveSiteCertificate(ip,port):
         retrievedcert=ssl.get_server_certificate((ip, int(port)))
     except ssl.SSLError as ssle1:
         try:
+            # TODO: Confirmar si ssl.PROTOCOL_TLSv1 cambia el protocolo 8NO ES FUNCION)
             print "Server %s not accepting SSLv2 neither SSLv3. Changing to TLSv1..." % ip_or_domain
             ssl.PROTOCOL_TLSv1
             retrievedcert=ssl.get_server_certificate((ip, int(port)))
@@ -173,7 +174,7 @@ for iline in ifile:
             if (isTargetPortOpen(ip,port)):
                 # Get all the certificate information we can
                 print ("Getting certificate info from %s:%s\t(%s)") % (ip,port,ip_or_domain)
-                cert=retrieveSiteCertificate(ip,port)
+                cert=timeout(retrieveSiteCertificate,(ip,port),timeout_duration=60)
                 cert_X509=M2Crypto.X509.load_cert_string(cert)
                 #Escribimos los datos
                 ofile.write(ip_or_domain + ";")
