@@ -13,9 +13,9 @@ import nmap
 #   * Expired certificates for the CAs
 #   * Summary of the CAs in a column
 
-# TODO: Establecer estadísticas del tipo de información que tienen los top sites
+# TODO: Establecer estadisticas del tipo de informacion que tienen los top sites
 # Usar la API de dev.compete.com (pasarsela como argumento al programa)
-# Mostrará la clasificación de los sitios de internet y que mercados son más seguros que otros en temas de certificados y comunicaciones cifradas..
+# Mostrara la clasificacion de los sitios de internet y que mercados son mas seguros que otros en temas de certificados y comunicaciones cifradas..
 
 #############
 # FUNCTIONS #
