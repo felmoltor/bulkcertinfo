@@ -189,6 +189,8 @@ for iline in ifile:
 
         else:
             sys.stderr.write("Line %s: The IP does not have the format <IP>:<PORT>. Skipping...\n" % nline)
+    else: # Es un comentario
+        print "Line %s: This line is a commentary (%s). Ignoring" % (nline,iline)
 
 ifile.close()
 ofile.close()
