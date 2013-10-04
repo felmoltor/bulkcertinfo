@@ -13,9 +13,56 @@ import nmap
 #   * Expired certificates for the CAs
 #   * Summary of the CAs in a column
 
+# TODO: Establecer estadísticas del tipo de información que tienen los top sites
+# Usar la API de dev.compete.com (pasarsela como argumento al programa)
+# Mostrará la clasificación de los sitios de internet y que mercados son más seguros que otros en temas de certificados y comunicaciones cifradas..
+
 #############
 # FUNCTIONS #
 #############
+
+# Timeout function taken from http://stackoverflow.com/questions/492519/timeout-on-a-python-function-call
+# (Thank FSM exists stackoverflow.com)
+def timeout(func, args=(), kwargs={}, timeout_duration=10, default=None):
+    """This function will spawn a thread and run the given function
+    using the args, kwargs and return the given default value if the
+    timeout_duration is exceeded.
+    """ 
+    import threading
+    class InterruptableThread(threading.Thread):
+        def __init__(self):
+            threading.Thread.__init__(self)
+            self.result = default
+        def run(self):
+            self.result = func(*args, **kwargs)
+    it = InterruptableThread()
+    it.start()
+    it.join(timeout_duration)
+    if it.isAlive():
+        return it.result
+    else:
+        return it.result
+    
+def retrieveSiteCertificate(ip,port):
+    retrievedcert = None
+    exception = None
+    ssl.PROTOCOL_SSLv23
+    
+    try:
+        retrievedcert=ssl.get_server_certificate((ip, int(port)))
+    except ssl.SSLError as ssle1:
+        try:
+            print "Server %s not accepting SSLv2 neither SSLv3. Changing to TLSv1..." % ip_or_domain
+            ssl.PROTOCOL_TLSv1
+            retrievedcert=ssl.get_server_certificate((ip, int(port)))
+        
+        except Exception as generale:
+            exception=generale
+                
+    except Exception as generale:
+        exception=generale
+    
+    return retrievedcert,exception
 
 def isTargetPortOpen(ip,port):
     return True
@@ -125,32 +172,8 @@ for iline in ifile:
            
             if (isTargetPortOpen(ip,port)):
                 # Get all the certificate information we can
-                print ("Getting certificate info from %s:%s (%s)") % (ip,port,ip_or_domain)
-                try:
-                    # Las veces que peta es por que no acepta SSLv3
-                    # Cambiar a TLSv1 en estos casos (http://docs.python.org/2/library/ssl.html)
-                    # ssl.PROTOCOL_TLSv1 o ssl.PROTOCOL_SSLv3
-                    ssl.PROTOCOL_SSLv3
-                    cert=ssl.get_server_certificate((ip, int(port)))
-                except ssl.SSLError as ssle1:
-                    try:
-                        print "Server %s not accepting SSLv3. Changing to TLSv1..." % ip_or_domain
-                        ssl.PROTOCOL_TLSv1
-                        cert=ssl.get_server_certificate((ip, int(port)))
-                    except ssl.SSLError as ssle2:
-                        try:
-                            print "Server %s not accepting TLSv1. Changing to SSLv2..." % ip_or_domain
-                            ssl.PROTOCOL_SSLv23
-                            cert=ssl.get_server_certificate((ip, int(port)))
-                        except Exception as generale:   
-                            sys.stderr.write("Line %s: There was some problem requesting SSL certificate to '%s'. Skipping.\n" % (nline,ip_or_domain))
-                            sys.stderr.write("Line %s: Errno %s: '%s'\n" % (nline,generale.errno,generale.message))
-                            ofile.write("%s;%s;%s;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;\n" % (ip_or_domain,ip,port))
-                            continue
-                except:
-                    sys.stderr.write("Unexpected error. There was some problem requesting Certificate to '%s'. Skipping." % ip_or_domain)
-                    continue
-
+                print ("Getting certificate info from %s:%s\t(%s)") % (ip,port,ip_or_domain)
+                cert=retrieveSiteCertificate(ip,port)
                 cert_X509=M2Crypto.X509.load_cert_string(cert)
                 #Escribimos los datos
                 ofile.write(ip_or_domain + ";")
