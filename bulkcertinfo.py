@@ -147,7 +147,7 @@ except IOError:
     exit(1)
 
 # Add header to CSV File
-ofile.write("Domain;IP;Port;Time Expired;Correct CN;Signature Algorithm;Public Key Algorithm;Public Key Size;Subject CN;Subject C;Subject ST;Subject L;Subject O;Subject OU;Subject Email;Valid not after;Valid not before;Serial Number;Version;Issuer Data;\n")
+ofile.write("Domain;IP;Port;Time Expired;Correct CN;Signature Algorithm;Public Key Algorithm;Public Key Size;Subject CN;Subject C;Subject ST;Subject L;Subject O;Subject OU;Subject Email;Valid not after;Valid not before;Serial Number;Version;Issuer ST;Issuer C;Issuer L;Issuer O;Issuer OU;Issuer CN;\n")
 
 nline=0
 for iline in ifile:
@@ -176,11 +176,11 @@ for iline in ifile:
                 cert,exception=timeout(retrieveSiteCertificate,(ip,port),timeout_duration=60)
                 if exception is not None:
                     print sys.stderr.write("Line %s: There was some problem retrieving the certificate of %s (%s). Skipping...\n" % (nline,ip_or_domain,ip))
-                    ofile.write("%s;%s;%s;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;\n" % (ip_or_domain,ip,port))
+                ofile.write("%s;%s;%s;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;\n" % (ip_or_domain,ip,port))
                     continue
                 elif cert is None:
                     print sys.stderr.write("Line %s: Timeout while retrieving the certificate of %s (%s). Skipping...\n" % (nline,ip_or_domain,ip))
-                    ofile.write("%s;%s;%s;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;\n" % (ip_or_domain,ip,port))
+                ofile.write("%s;%s;%s;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;\n" % (ip_or_domain,ip,port))
                     continue
 
                 cert_X509=M2Crypto.X509.load_cert_string(cert)
@@ -213,11 +213,16 @@ for iline in ifile:
                 ofile.write(str(cert_X509.get_not_before()) + ';')
                 ofile.write(str(cert_X509.get_serial_number()) + ';')
                 ofile.write(str(cert_X509.get_version()) + ';')
-                ofile.write(str(cert_X509.get_issuer().as_text()) + ';')
+                ofile.write(str(cert_X509.get_issuer().ST) + ';')
+                ofile.write(str(cert_X509.get_issuer().C) + ';')
+                ofile.write(str(cert_X509.get_issuer().L) + ';')
+                ofile.write(str(cert_X509.get_issuer().O) + ';')
+                ofile.write(str(cert_X509.get_issuer().OU) + ';')
+                ofile.write(str(cert_X509.get_issuer().CN) + ';')
                 ofile.write("\n")
             else:  # Del isTargetPortOpen
                 print sys.stderr.write("Line %s: Target port %s is not open on target domain host (%s,%s). Skipping...\n" % (nline,port,ip_or_domain,ip))
-                ofile.write("%s;%s;%s;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;\n" % (ip_or_domain,ip,port))
+                ofile.write("%s;%s;%s;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;\n" % (ip_or_domain,ip,port))
 
         else:
             sys.stderr.write("Line %s: The IP does not have the format <IP>:<PORT>. Skipping...\n" % nline)
