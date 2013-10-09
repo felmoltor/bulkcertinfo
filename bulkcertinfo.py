@@ -49,18 +49,18 @@ def retrieveSiteCertificate(ip,port):
     ssl.PROTOCOL_SSLv23
     
     try:
-        retrievedcert=ssl.get_server_certificate((ip, int(port)),ssl.PROTOCOL_SSLv23)
-    except ssl.SSLError as ssle1:
+        retrievedcert=ssl.get_server_certificate((ip, int(port)),ssl_version=ssl.PROTOCOL_SSLv23)
+    except ssl.SSLError:
         try:
             # TODO: Confirmar si ssl.PROTOCOL_TLSv1 cambia el protocolo 8NO ES FUNCION)
             print "Server %s not accepting SSLv2 neither SSLv3. Changing to TLSv1..." % ip_or_domain
-            retrievedcert=ssl.get_server_certificate((ip, int(port)),ssl.PROTOCOL_TLSv1)
+            retrievedcert=ssl.get_server_certificate((ip, int(port)),ssl_version=ssl.PROTOCOL_TLSv1)
         
-        except Exception as generale:
-            exception=generale
+        except Exception as generale1:
+            exception=generale1
                 
-    except Exception as generale:
-        exception=generale
+    except Exception as generale2:
+        exception=generale2
     
     return retrievedcert,exception
 
@@ -172,14 +172,16 @@ for iline in ifile:
            
             if (isTargetPortOpen(ip,port)):
                 # Get all the certificate information we can
-                print ("Getting certificate info from %s:%s\t(%s)") % (ip,port,ip_or_domain)
-                cert,exception=timeout(retrieveSiteCertificate,(ip,port),timeout_duration=60)
+                print ("Getting certificate info from %s:%s (%s)") % (ip,port,ip_or_domain)
+                cert,exception=retrieveSiteCertificate(ip,port)
+                
                 if exception is not None:
-                    print sys.stderr.write("Line %s: There was some problem retrieving the certificate of %s (%s). Skipping...\n" % (nline,ip_or_domain,ip))
+                    sys.stderr.write("Line %s: There was some problem retrieving the certificate of %s (%s). Skipping...\n" % (nline,ip_or_domain,ip))
                     ofile.write("%s;%s;%s;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;\n" % (ip_or_domain,ip,port))
                     continue
-                elif cert is None:
-                    print sys.stderr.write("Line %s: Timeout while retrieving the certificate of %s (%s). Skipping...\n" % (nline,ip_or_domain,ip))
+                
+                if cert is None:
+                    sys.stderr.write("Line %s: Timeout while retrieving the certificate of %s (%s). Skipping...\n" % (nline,ip_or_domain,ip))
                     ofile.write("%s;%s;%s;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;\n" % (ip_or_domain,ip,port))
                     continue
 
@@ -216,7 +218,7 @@ for iline in ifile:
                 ofile.write(str(cert_X509.get_issuer().as_text()) + ';')
                 ofile.write("\n")
             else:  # Del isTargetPortOpen
-                print sys.stderr.write("Line %s: Target port %s is not open on target domain host (%s,%s). Skipping...\n" % (nline,port,ip_or_domain,ip))
+                sys.stderr.write("Line %s: Target port %s is not open on target domain host (%s,%s). Skipping...\n" % (nline,port,ip_or_domain,ip))
                 ofile.write("%s;%s;%s;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;NOT AVAILABLE;\n" % (ip_or_domain,ip,port))
 
         else:
